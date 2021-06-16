@@ -1,0 +1,64 @@
+version: "3.5"
+services:
+  nginx:
+    image: nginx:1.21.0
+    container_name: nginx
+    ports:
+      - 1122:1122
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf
+      - ./nginx/log:/var/log/nginx
+    environment:
+      - TZ="Asia/Tokyo"
+    command: [
+        "nginx",
+        "-g",
+        "daemon off;",
+        "-c",
+        "/etc/nginx/nginx.conf"
+      ]
+    depends_on:
+      - app
+    networks:
+      - sapporo
+    restart: always
+
+  app:
+    image: ghcr.io/ddbj/sapporo-service:1.0.13
+    container_name: sapporo-service
+    volumes:
+      # The ones below are mounted for cwltool and DinD.
+      - ${PWD}/run:${PWD}/run
+      - /var/run/docker.sock:/var/run/docker.sock
+      - /tmp:/tmp
+    environment:
+      # Priority: [Command Line Argument] -> [Environment Variable] -> [Default Values]
+      - SAPPORO_DEBUG=False
+      - SAPPORO_RUN_DIR=${PWD}/run
+      - SAPPORO_GET_RUNS=False
+      - SAPPORO_ACCESS_CONTROL_ALLOW_ORIGIN=*
+      # - SAPPORO_RUN_ONLY_REGISTERED_WORKFLOWS=False
+      # - SAPPORO_URL_PREFIX=/
+    expose:
+      - 1122
+    restart: on-failure
+    working_dir: /app
+    command: [
+        "uwsgi",
+        "--yaml",
+        "/app/uwsgi.yml",
+        "--uwsgi-socket",
+        ":1122",
+        "--master",
+        "--processes",
+        "4",
+        "--threads",
+        "2",
+      ]
+    networks:
+      - sapporo
+    restart: always
+
+networks:
+  sapporo:
+    name: sapporo-network

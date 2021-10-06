@@ -38,7 +38,7 @@ setup(
         "flask",
         "jsonschema",
         "requests",
-        "uwsgi",
+        # "uwsgi",
     ],
     tests_require=[
         "flake8",

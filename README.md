@@ -47,7 +47,7 @@ $ sudo -i -u sapporo-admin
 Rootless Docker を使って sapporo-service / workflow engine / tool を起動する。
 NIG HPC 上での Rootless Docker については、https://hackmd.io/@suecharo/r1KbEZH-Y を参照。
 
-Slurm の 全ての (main/worker) node にて、Rootless Docker を起動しておく。
+Slurm の 全ての (main/worker) node にて、Rootless Docker を起動する。
 
 ```bash
 $ pwd
@@ -64,6 +64,8 @@ CONTAINER ID   IMAGE     COMMAND   CREATED   STATUS    PORTS     NAMES
 ### Python3.8
 
 Python3.8 を Install する。
+
+HOME directory が共有されているため、全ての Node に Install される。
 
 https://www.python.org/downloads/release/python-3813/
 
@@ -100,7 +102,9 @@ Slurm の main node にて、Sapporo-service を起動する。
 
 Docker container で起動しない理由として、Slurm への job 投げやストレージドライバへの対応が困難だったことが挙げられる。
 
-Install:
+HOME directory が共有されているため、全ての Node に Install され、`run.sh` 内で sapporo library を使える。
+
+Sapporo-service を Install:
 
 ```bash
 $ pwd

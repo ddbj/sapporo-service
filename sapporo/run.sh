@@ -141,11 +141,11 @@ function cancel() {
 }
 
 function download_workflow_attachment() {
-  python3 -c "from sapporo.run import download_workflow_attachment; download_workflow_attachment('${run_dir}')" || executor_error
+  ~/Python-3.8.13/python -c "from sapporo.run import download_workflow_attachment; download_workflow_attachment('${run_dir}')" || executor_error
 }
 
 function generate_outputs_list() {
-  python3 -c "from sapporo.run import dump_outputs_list; dump_outputs_list('${run_dir}')" || executor_error
+  ~/Python-3.8.13/python -c "from sapporo.run import dump_outputs_list; dump_outputs_list('${run_dir}')" || executor_error
 }
 
 function clean_rundir() {

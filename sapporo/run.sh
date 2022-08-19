@@ -189,7 +189,7 @@ wf_engine_params=$(head -n 1 ${wf_engine_params_file})
 D_SOCK="-v /data1/sapporo-admin/rootless_docker/run/docker.sock:/var/run/docker.sock"
 D_BIN="-v /home/sapporo-admin/bin/docker:/usr/bin/docker"
 D_TMP="-v /tmp:/tmp"
-DOCKER_CMD="docker run -i --rm ${D_SOCK} -e DOCKER_HOST=unix:///var/run/docker.sock ${D_BIN} ${D_TMP} -v ${run_dir}:${run_dir} -w=${exe_dir}"
+DOCKER_CMD="docker -H /data1/sapporo-admin/rootless_docker/run/docker.sock run -i --rm ${D_SOCK} -e DOCKER_HOST=unix:///var/run/docker.sock ${D_BIN} ${D_TMP} -v ${run_dir}:${run_dir} -w=${exe_dir}"
 
 # 4 Exit cases
 # 1. The description of run.sh was wrong.

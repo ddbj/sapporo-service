@@ -2,11 +2,14 @@
 set -e
 
 function run_wf() {
+  echo "INITIALIZING" >${state}
+  download_workflow_attachment
   echo "QUEUED" >${state}
   # e.g. when wf_engine_name=cwltool, call function run_cwltool
   local function_name="run_${wf_engine_name}"
   if [[ "$(type -t ${function_name})" == "function" ]]; then
     ${function_name}
+    generate_outputs_list
   else
     executor_error
   fi
@@ -122,22 +125,11 @@ function executor_error() {
   exit \${original_exit_code}
 }
 
-function download_workflow_attachment() {
-  python3 -c "from sapporo.run import download_workflow_attachment; download_workflow_attachment('${run_dir}')" || executor_error
-}
-
-function generate_outputs_list() {
-  python3 -c "from sapporo.run import dump_outputs_list; dump_outputs_list('${run_dir}')" || executor_error
-}
-
-echo "INITIALIZING" >${state}
-download_workflow_attachment
 echo "RUNNING" >${state}
 date +"%Y-%m-%dT%H:%M:%S" >${start_time}
 ${cmd_txt} || executor_error
 date +"%Y-%m-%dT%H:%M:%S" >${end_time}
 ${cp_outputs_txt}
-generate_outputs_list
 echo 0 >${exit_code}
 echo "COMPLETE" >${state}
 EOF
@@ -146,6 +138,14 @@ EOF
 function cancel() {
   # Pre-cancellation procedures
   cancel_by_request
+}
+
+function download_workflow_attachment() {
+  python3 -c "from sapporo.run import download_workflow_attachment; download_workflow_attachment('${run_dir}')" || executor_error
+}
+
+function generate_outputs_list() {
+  python3 -c "from sapporo.run import dump_outputs_list; dump_outputs_list('${run_dir}')" || executor_error
 }
 
 function clean_rundir() {

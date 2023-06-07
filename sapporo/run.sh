@@ -22,6 +22,23 @@ function run_cwltool() {
   sbatch --parsable "${slurm_script}" >"${slurm_jobid}"
 }
 
+function run_cwltool_experimental() {
+  #local container="quay.io/commonwl/cwltool:3.1.20220628170238"
+  #local cmd_txt="${DOCKER_CMD} ${container} --outdir ${outputs_dir} ${wf_engine_params} ${wf_url} ${wf_params} 1>${stdout} 2>${stderr}"
+  local cmd_txt="source /home/sapporo-admin/work-manabu/20221115-cwltool-imputation-server/venv-cwltool-imputation-server/bin/activate; cwltool --singularity --outdir ${outputs_dir} ${wf_url} ${wf_params} 1>${stdout} 2>${stderr}"
+  echo ${cmd_txt} >${cmd}
+  eval ${cmd_txt} || executor_error
+  #generate_slurm_sh "${cmd_txt}"
+  #sbatch --parsable "${slurm_script}" >"${slurm_jobid}"
+}
+function run_cwltool_experimental_slurm() {
+  #local container="quay.io/commonwl/cwltool:3.1.20220628170238"
+  #local cmd_txt="${DOCKER_CMD} ${container} --outdir ${outputs_dir} ${wf_engine_params} ${wf_url} ${wf_params} 1>${stdout} 2>${stderr}"
+  local cmd_txt="source /home/sapporo-admin/work-manabu/20221115-cwltool-imputation-server/venv-cwltool-imputation-server/bin/activate; cwltool --singularity --outdir ${outputs_dir} ${wf_url} ${wf_params} 1>${stdout} 2>${stderr}"
+  generate_slurm_sh "${cmd_txt}"
+  sbatch --mem=128GB -c 16 --parsable "${slurm_script}" >"${slurm_jobid}"
+}
+
 function run_nextflow() {
   local container="nextflow/nextflow:22.04.4"
   local cmd_txt=""

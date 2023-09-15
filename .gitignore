@@ -227,3 +227,6 @@ media
 static
 
 run/
+
+log.txt
+pid.txt

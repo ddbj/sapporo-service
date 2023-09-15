@@ -123,11 +123,11 @@ function executor_error() {
 }
 
 function download_workflow_attachment() {
-  ~/Python-3.8.13/python -c "from sapporo.run import download_workflow_attachment; download_workflow_attachment('${run_dir}')" || executor_error
+  python3 -c "from sapporo.run import download_workflow_attachment; download_workflow_attachment('${run_dir}')" || executor_error
 }
 
 function generate_outputs_list() {
-  ~/Python-3.8.13/python -c "from sapporo.run import dump_outputs_list; dump_outputs_list('${run_dir}')" || executor_error
+  python3 -c "from sapporo.run import dump_outputs_list; dump_outputs_list('${run_dir}')" || executor_error
 }
 
 echo "INITIALIZING" >${state}
@@ -186,10 +186,11 @@ wf_url=$(jq -r ".workflow_url" ${run_request})
 wf_engine_params=$(head -n 1 ${wf_engine_params_file})
 
 # Sibling docker command
-D_SOCK="-v /data1/sapporo-admin/rootless_docker/run/docker.sock:/var/run/docker.sock"
-D_BIN="-v /home/sapporo-admin/bin/docker:/usr/bin/docker"
+D_SOCK="-v /var/run/docker.sock:/var/run/docker.sock"
+# D_BIN="-v /usr/bin/docker:/usr/bin/docker"
 D_TMP="-v /tmp:/tmp"
-DOCKER_CMD="docker -H unix:///data1/sapporo-admin/rootless_docker/run/docker.sock run -i --rm ${D_SOCK} -e DOCKER_HOST=unix:///var/run/docker.sock ${D_BIN} ${D_TMP} -v ${run_dir}:${run_dir} -w=${exe_dir}"
+# DOCKER_CMD="docker run -i --rm ${D_SOCK} -e DOCKER_HOST=unix:///var/run/docker.sock ${D_BIN} ${D_TMP} -v ${run_dir}:${run_dir} -w=${exe_dir}"
+DOCKER_CMD="docker run -i --rm ${D_SOCK} -e DOCKER_HOST=unix:///var/run/docker.sock ${D_TMP} -v ${run_dir}:${run_dir} -w=${exe_dir}"
 
 # 4 Exit cases
 # 1. The description of run.sh was wrong.

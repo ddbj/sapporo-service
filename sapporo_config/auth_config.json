@@ -1,0 +1,16 @@
+{
+  "auth_enabled": true,
+  "idp_provider": "external",
+  "sapporo_auth_config": {
+    "secret_key": "unused",
+    "expires_delta_hours": 24,
+    "users": []
+  },
+  "external_config": {
+    "idp_url": "https://idp.ddbj.nig.ac.jp/realms/master",
+    "jwt_audience": "account",
+    "client_mode": "public",
+    "client_id": "sapporo",
+    "client_secret": null
+  }
+}

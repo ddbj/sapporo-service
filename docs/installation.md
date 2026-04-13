@@ -47,13 +47,18 @@ docker pull ghcr.io/sapporo-wes/sapporo-service:latest
 
 ### Docker Compose
 
-Start the service with Docker Compose:
+The repository ships two compose files:
+
+- `compose.docker.yml` (described below) uses Docker-in-Docker and the public `ghcr.io/sapporo-wes/sapporo-service` image. This is the default for standalone deployments.
+- `compose.yml` is tailored for the DDBJ/NIG supercomputer and uses `podman-compose` + Slurm REST API. See [Deployment (NIG)](deployment-nig.md) if you are deploying there.
+
+Start the Docker-in-Docker stack with:
 
 ```bash
-docker compose up -d
+docker compose -f compose.docker.yml up -d
 ```
 
-The `compose.yml` in the repository:
+The `compose.docker.yml` in the repository:
 
 ```yaml
 services:
@@ -86,7 +91,7 @@ The sapporo-service does not install workflow engines directly. Instead, it runs
 
 The key constraint is that **volume mount paths must be identical between the host and the sapporo container**. When a workflow engine container mounts `${run_dir}:${run_dir}`, Docker resolves that path on the host filesystem. If the sapporo container used a different internal path, the workflow engine container would mount an empty or nonexistent directory.
 
-This is why `compose.yml` uses `${PWD}/runs:${PWD}/runs` -- the host absolute path is passed through as-is, ensuring that both the sapporo container and any spawned workflow engine containers see the same files at the same paths. The three required mounts are:
+This is why `compose.docker.yml` uses `${PWD}/runs:${PWD}/runs` -- the host absolute path is passed through as-is, ensuring that both the sapporo container and any spawned workflow engine containers see the same files at the same paths. The three required mounts are:
 
 1. **Docker socket** (`/var/run/docker.sock:/var/run/docker.sock`) -- allows the service to spawn workflow engine containers
 2. **Run directory** (`${PWD}/runs:${PWD}/runs`) -- uses the host absolute path so paths match between containers

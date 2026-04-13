@@ -1,0 +1,7 @@
+{
+  "contact_info_url": "https://github.com/sapporo-wes/sapporo-service/issues",
+  "tags": {
+    "deployment": "ddbj-nig-supercomputer",
+    "executor": "slurm-rest-v0.0.39"
+  }
+}

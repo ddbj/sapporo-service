@@ -44,6 +44,7 @@ nav:
   - Architecture: architecture.md
   - RO-Crate: ro-crate.md
   - Development: development.md
+  - Deployment (NIG): deployment-nig.md
   - Agent Skill: agent-skill.md
   - Agent Quick Reference: agent-quick-ref.md
 

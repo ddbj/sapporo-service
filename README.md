@@ -25,11 +25,13 @@ The service builds on GA4GH WES 1.1.0 with additional capabilities defined in th
 ## Quick Start
 
 ```bash
-docker compose up -d
+docker compose -f compose.docker.yml up -d
 curl localhost:1122/service-info
 ```
 
 See the [Getting Started](docs/getting-started.md) guide for a complete walkthrough including workflow submission.
+
+> Deploying on the DDBJ/NIG supercomputer? See [Deployment (NIG)](docs/deployment-nig.md) for the `podman-compose` + Slurm REST API setup.
 
 ## Documentation
 
@@ -43,6 +45,7 @@ Full documentation is available at **<https://sapporo-wes.github.io/sapporo-serv
 - [Architecture](docs/architecture.md) - run.sh abstraction, run directory, SQLite, RO-Crate, code structure
 - [RO-Crate](docs/ro-crate.md) - RO-Crate metadata generation specification
 - [Development](docs/development.md) - Development environment, testing, release process
+- [Deployment (NIG)](docs/deployment-nig.md) - DDBJ/NIG supercomputer deployment with podman-compose and Slurm REST API
 - [Agent Skill](docs/agent-skill.md) - LLM/agent reference: submit workflows, poll status, retrieve outputs via `curl`
 - [Agent Quick Reference](docs/agent-quick-ref.md) - Essential 4 commands in ~40 lines
 

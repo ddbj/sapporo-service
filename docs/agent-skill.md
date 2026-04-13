@@ -20,8 +20,8 @@ curl -s $SAPPORO_ENDPOINT/service-info | jq .workflow_engine_versions
 If that fails, start with Docker Compose:
 
 ```bash
-curl -O https://raw.githubusercontent.com/sapporo-wes/sapporo-service/main/compose.yml
-docker compose up -d
+curl -O https://raw.githubusercontent.com/sapporo-wes/sapporo-service/main/compose.docker.yml
+docker compose -f compose.docker.yml up -d
 ```
 
 ## Phase 1: Submit a workflow

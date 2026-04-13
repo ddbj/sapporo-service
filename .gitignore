@@ -221,6 +221,7 @@ __marimo__/
 # Project specific
 sapporo/_version.py
 runs/
+runs-*/
 keycloak-data/
 tests/htmlcov/
 mutants/

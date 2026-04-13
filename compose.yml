@@ -42,8 +42,8 @@ services:
     userns_mode: keep-id
     init: true
     networks:
-      - sapporo-nig-net-${SAPPORO_ENV}
+      - sapporo-net
 
 networks:
-  sapporo-nig-net-${SAPPORO_ENV}:
+  sapporo-net:
     name: sapporo-nig-net-${SAPPORO_ENV}

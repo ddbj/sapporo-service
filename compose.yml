@@ -30,7 +30,6 @@ services:
       - SAPPORO_AUTH_CONFIG=/app/sapporo_config/auth_config.json
       - SAPPORO_RUN_SH=/app/sapporo_config/run.slurm.sh
       - SAPPORO_ALLOW_ORIGIN=${SAPPORO_ALLOW_ORIGIN:-*}
-      - SAPPORO_RUN_REMOVE_OLDER_THAN_DAYS=${SAPPORO_RUN_REMOVE_OLDER_THAN_DAYS:-}
       - SAPPORO_EXTRA_PODMAN_ARGS=${SAPPORO_EXTRA_PODMAN_ARGS:-}
     volumes:
       - ./sapporo_config:/app/sapporo_config:ro

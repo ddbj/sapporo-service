@@ -139,6 +139,23 @@ function generate_outputs_list() {
 echo "RUNNING" >__STATE__
 date -u +"%Y-%m-%dT%H:%M:%S" >__START_TIME__
 
+# Ensure rootless podman socket is available for engines that spawn
+# sub-containers. On Slurm worker nodes /run/user/$UID/podman/podman.sock
+# may not exist because there is no interactive login session.
+_SAPPORO_PODMAN_SOCK="/tmp/sapporo-podman-$(id -u).sock"
+if [[ -S "/run/user/$(id -u)/podman/podman.sock" ]]; then
+  _SAPPORO_PODMAN_SOCK="/run/user/$(id -u)/podman/podman.sock"
+else
+  rm -f "${_SAPPORO_PODMAN_SOCK}"
+  podman system service --time 0 "unix://${_SAPPORO_PODMAN_SOCK}" &
+  _SAPPORO_SVC_PID=$!
+  for _i in 1 2 3 4 5; do
+    [[ -S "${_SAPPORO_PODMAN_SOCK}" ]] && break
+    sleep 1
+  done
+fi
+export _SAPPORO_PODMAN_SOCK
+
 # Main workflow command
 echo "=== [__MAIN_LABEL__] Started ===" >>__STDERR__
 __MAIN_CMD__ || {
@@ -280,7 +297,7 @@ function generate_ro_crate() {
 
 function run_cwltool() {
   local container="quay.io/commonwl/cwltool:3.1.20260108082145"
-  main_cmd="podman run --rm --userns=keep-id -v /run/user/\$(id -u)/podman/podman.sock:/var/run/docker.sock -e DOCKER_HOST=unix:///var/run/docker.sock -v /tmp:/tmp -v ${run_dir}:${run_dir} ${extra_podman_args_str} -w ${exe_dir} ${container} --outdir ${outputs_dir} ${wf_engine_params} ${wf_url} ${wf_params} 1>>${stdout} 2>>${stderr}"
+  main_cmd="podman run --rm --userns=keep-id -v \${_SAPPORO_PODMAN_SOCK}:/var/run/docker.sock -e DOCKER_HOST=unix:///var/run/docker.sock -v /tmp:/tmp -v ${run_dir}:${run_dir} ${extra_podman_args_str} -w ${exe_dir} ${container} --outdir ${outputs_dir} ${wf_engine_params} ${wf_url} ${wf_params} 1>>${stdout} 2>>${stderr}"
   generate_slurm_script "${main_cmd}" "cwltool"
   submit_engine_job
 }
@@ -295,21 +312,21 @@ function run_nextflow() {
   cat >"${nf_config}" <<'NFCFG'
 docker.envWhitelist = 'DOCKER_API_VERSION'
 NFCFG
-  main_cmd="podman run --rm --userns=keep-id -v /run/user/\$(id -u)/podman/podman.sock:/var/run/docker.sock -e DOCKER_HOST=unix:///var/run/docker.sock -e NXF_HOME=${nxf_home} -e NXF_ASSETS=${nxf_home}/assets -v ${run_dir}:${run_dir} ${extra_podman_args_str} -w ${exe_dir} ${container} nextflow run ${wf_url} -c ${nf_config} ${wf_engine_params} -params-file ${wf_params} --outdir ${outputs_dir} -work-dir ${exe_dir} 1>>${stdout} 2>>${stderr}"
+  main_cmd="podman run --rm --userns=keep-id -v \${_SAPPORO_PODMAN_SOCK}:/var/run/docker.sock -e DOCKER_HOST=unix:///var/run/docker.sock -e NXF_HOME=${nxf_home} -e NXF_ASSETS=${nxf_home}/assets -v ${run_dir}:${run_dir} ${extra_podman_args_str} -w ${exe_dir} ${container} nextflow run ${wf_url} -c ${nf_config} ${wf_engine_params} -params-file ${wf_params} --outdir ${outputs_dir} -work-dir ${exe_dir} 1>>${stdout} 2>>${stderr}"
   generate_slurm_script "${main_cmd}" "nextflow"
   submit_engine_job
 }
 
 function run_toil() {
   local container="quay.io/ucsc_cgl/toil:9.1.1"
-  main_cmd="podman run --rm --userns=keep-id -v /run/user/\$(id -u)/podman/podman.sock:/var/run/docker.sock -e DOCKER_HOST=unix:///var/run/docker.sock -v ${run_dir}:${run_dir} -e TOIL_WORKDIR=${exe_dir} ${extra_podman_args_str} -w ${exe_dir} ${container} toil-cwl-runner --outdir ${outputs_dir} ${wf_engine_params} ${wf_url} ${wf_params} 1>>${stdout} 2>>${stderr}"
+  main_cmd="podman run --rm --userns=keep-id -v \${_SAPPORO_PODMAN_SOCK}:/var/run/docker.sock -e DOCKER_HOST=unix:///var/run/docker.sock -v ${run_dir}:${run_dir} -e TOIL_WORKDIR=${exe_dir} ${extra_podman_args_str} -w ${exe_dir} ${container} toil-cwl-runner --outdir ${outputs_dir} ${wf_engine_params} ${wf_url} ${wf_params} 1>>${stdout} 2>>${stderr}"
   generate_slurm_script "${main_cmd}" "toil"
   submit_engine_job
 }
 
 function run_cromwell() {
   local container="ghcr.io/sapporo-wes/cromwell-with-docker:92"
-  main_cmd="podman run --rm --userns=keep-id -v /run/user/\$(id -u)/podman/podman.sock:/var/run/docker.sock -e DOCKER_HOST=unix:///var/run/docker.sock -v /tmp:/tmp -v ${run_dir}:${run_dir} ${extra_podman_args_str} -w ${exe_dir} ${container} run ${wf_engine_params} ${wf_url} -i ${wf_params} -m ${exe_dir}/metadata.json 1>>${stdout} 2>>${stderr}"
+  main_cmd="podman run --rm --userns=keep-id -v \${_SAPPORO_PODMAN_SOCK}:/var/run/docker.sock -e DOCKER_HOST=unix:///var/run/docker.sock -v /tmp:/tmp -v ${run_dir}:${run_dir} ${extra_podman_args_str} -w ${exe_dir} ${container} run ${wf_engine_params} ${wf_url} -i ${wf_params} -m ${exe_dir}/metadata.json 1>>${stdout} 2>>${stderr}"
 
   # Post: copy output files listed in cromwell's metadata.json into outputs/.
   local post_script="${exe_dir}/.cromwell_post.sh"
@@ -344,7 +361,7 @@ function run_snakemake() {
   fi
 
   local container="snakemake/snakemake:v9.16.3"
-  main_cmd="podman run --rm --userns=keep-id -v ${run_dir}:${run_dir} ${extra_podman_args_str} -w ${exe_dir} ${container} bash -c \"snakemake ${wf_engine_params} --configfile ${wf_params} --snakefile ${wf_url_local} && snakemake --configfile ${wf_params} --snakefile ${wf_url_local} --summary 2>/dev/null | tail -n +2 | cut -f 1 > ${exe_dir}/.snakemake_outputs\" 1>>${stdout} 2>>${stderr}"
+  main_cmd="podman run --rm --userns=keep-id -e HOME=/tmp -v ${run_dir}:${run_dir} ${extra_podman_args_str} -w ${exe_dir} ${container} bash -c \"snakemake ${wf_engine_params} --configfile ${wf_params} --snakefile ${wf_url_local} && snakemake --configfile ${wf_params} --snakefile ${wf_url_local} --summary 2>/dev/null | tail -n +2 | cut -f 1 > ${exe_dir}/.snakemake_outputs\" 1>>${stdout} 2>>${stderr}"
 
   # Post: copy snakemake outputs listed in .snakemake_outputs.
   local post_script="${exe_dir}/.snakemake_post.sh"
@@ -374,7 +391,7 @@ SNAKEMAKE_POST_EOF
 
 function run_ep3() {
   local container="ghcr.io/tom-tan/ep3:v1.7.0"
-  main_cmd="podman run --rm --userns=keep-id -v /run/user/\$(id -u)/podman/podman.sock:/var/run/docker.sock -e DOCKER_HOST=unix:///var/run/docker.sock -v /tmp:/tmp -v ${run_dir}:${run_dir} ${extra_podman_args_str} -w ${exe_dir} ${container} ep3-runner --verbose --outdir ${outputs_dir} ${wf_engine_params} ${wf_url} ${wf_params} 1>>${stdout} 2>>${stderr}"
+  main_cmd="podman run --rm --userns=keep-id -v \${_SAPPORO_PODMAN_SOCK}:/var/run/docker.sock -e DOCKER_HOST=unix:///var/run/docker.sock -v /tmp:/tmp -v ${run_dir}:${run_dir} ${extra_podman_args_str} -w ${exe_dir} ${container} ep3-runner --verbose --outdir ${outputs_dir} ${wf_engine_params} ${wf_url} ${wf_params} 1>>${stdout} 2>>${stderr}"
   generate_slurm_script "${main_cmd}" "ep3"
   submit_engine_job
 }
@@ -383,7 +400,7 @@ function run_streamflow() {
   # StreamFlow's DockerConnector requires a `docker` binary. Bind-mount
   # podman as /usr/bin/docker so streamflow can invoke it transparently.
   local container="alphaunito/streamflow:0.2.0.dev14"
-  main_cmd="podman run --rm --userns=keep-id -v /run/user/\$(id -u)/podman/podman.sock:/var/run/docker.sock -e DOCKER_HOST=unix:///var/run/docker.sock -v /usr/bin/podman:/usr/bin/docker:ro -v /tmp:/tmp -v ${run_dir}:${run_dir} ${extra_podman_args_str} -w ${exe_dir} ${container} cwl-runner --outdir ${outputs_dir} ${wf_engine_params} ${wf_url} ${wf_params} 1>>${stdout} 2>>${stderr}"
+  main_cmd="podman run --rm --userns=keep-id -v \${_SAPPORO_PODMAN_SOCK}:/var/run/docker.sock -e DOCKER_HOST=unix:///var/run/docker.sock -v /usr/bin/podman:/usr/bin/docker:ro -v /tmp:/tmp -v ${run_dir}:${run_dir} ${extra_podman_args_str} -w ${exe_dir} ${container} cwl-runner --outdir ${outputs_dir} ${wf_engine_params} ${wf_url} ${wf_params} 1>>${stdout} 2>>${stderr}"
   generate_slurm_script "${main_cmd}" "streamflow"
   submit_engine_job
 }

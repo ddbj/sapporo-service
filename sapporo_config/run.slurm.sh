@@ -361,7 +361,10 @@ function run_snakemake() {
   fi
 
   local container="snakemake/snakemake:v9.16.3"
-  main_cmd="podman run --rm --userns=keep-id -e HOME=/tmp -v ${run_dir}:${run_dir} ${extra_podman_args_str} -w ${exe_dir} ${container} bash -c \"snakemake --workflow-profile none ${wf_engine_params} --configfile ${wf_params} --snakefile ${wf_url_local} && snakemake --workflow-profile none --configfile ${wf_params} --snakefile ${wf_url_local} --summary 2>/dev/null | tail -n +2 | cut -f 1 > ${exe_dir}/.snakemake_outputs\" 1>>${stdout} 2>>${stderr}"
+  # snakemake container USER=root, so --userns=keep-id alone maps to uid=0
+  # which cannot read sapporo-admin owned files. Explicit --user forces the
+  # correct UID/GID inside the container.
+  main_cmd="podman run --rm --userns=keep-id --user \$(id -u):\$(id -g) -e HOME=/tmp -v ${run_dir}:${run_dir} ${extra_podman_args_str} -w ${exe_dir} ${container} bash -c \"snakemake --workflow-profile none ${wf_engine_params} --configfile ${wf_params} --snakefile ${wf_url_local} && snakemake --workflow-profile none --configfile ${wf_params} --snakefile ${wf_url_local} --summary 2>/dev/null | tail -n +2 | cut -f 1 > ${exe_dir}/.snakemake_outputs\" 1>>${stdout} 2>>${stderr}"
 
   # Post: copy snakemake outputs listed in .snakemake_outputs.
   local post_script="${exe_dir}/.snakemake_post.sh"

@@ -39,10 +39,13 @@ else
 fi
 
 echo "[2] sapporo /service-info"
-if curl -sf --max-time 5 "http://localhost:${SAPPORO_PORT}/service-info" >/dev/null; then
-  pass "/service-info on localhost:${SAPPORO_PORT}"
+HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" --max-time 5 "http://localhost:${SAPPORO_PORT}/service-info" || echo "000")
+if [[ "${HTTP_CODE}" == "200" ]]; then
+  pass "/service-info on localhost:${SAPPORO_PORT} (200)"
+elif [[ "${HTTP_CODE}" == "401" ]]; then
+  pass "/service-info on localhost:${SAPPORO_PORT} (401 auth required — server is up)"
 else
-  fail "/service-info on localhost:${SAPPORO_PORT} unreachable"
+  fail "/service-info on localhost:${SAPPORO_PORT} (HTTP ${HTTP_CODE})"
 fi
 
 echo "[3] slurmrestd diag"

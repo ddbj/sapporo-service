@@ -1,5 +1,54 @@
 {
-  "contact_info_url": "https://github.com/sapporo-wes/sapporo-service/issues",
+  "contactUrl": "https://github.com/sapporo-wes/sapporo-service/issues",
+  "workflow_type_versions": {
+    "CWL": {
+      "workflow_type_version": ["v1.0", "v1.1", "v1.2"]
+    },
+    "WDL": {
+      "workflow_type_version": ["1.0"]
+    },
+    "NFL": {
+      "workflow_type_version": ["DSL2"]
+    },
+    "SMK": {
+      "workflow_type_version": ["1.0"]
+    },
+    "StreamFlow": {
+      "workflow_type_version": ["v1.0"]
+    }
+  },
+  "workflow_engine_versions": {
+    "cwltool": {
+      "workflow_engine_version": ["3.1.20260108082145"]
+    },
+    "nextflow": {
+      "workflow_engine_version": ["25.10.4"]
+    },
+    "toil": {
+      "workflow_engine_version": ["9.1.1"]
+    },
+    "cromwell": {
+      "workflow_engine_version": ["92"]
+    },
+    "snakemake": {
+      "workflow_engine_version": ["v9.16.3"]
+    },
+    "ep3": {
+      "workflow_engine_version": ["v1.7.0"]
+    },
+    "streamflow": {
+      "workflow_engine_version": ["0.2.0.dev14"]
+    }
+  },
+  "default_workflow_engine_parameters": {
+    "snakemake": [
+      {
+        "name": "--cores",
+        "type": "int",
+        "default_value": "1"
+      }
+    ]
+  },
   "tags": {
     "deployment": "ddbj-nig-supercomputer",
     "executor": "slurm-rest-v0.0.39"

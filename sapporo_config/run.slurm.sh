@@ -161,7 +161,10 @@ SLURM_SCRIPT_HEREDOC
 
   # Replace placeholders using SOH control character (0x01) as delimiter
   # to avoid conflicts with any printable character in variable values.
+  # Escape sed replacement special chars: & (backreference) and \ (escape).
   local d=$'\x01'
+  local esc_main="${main_cmd_local//&/\\&}"
+  local esc_post="${post_cmd//&/\\&}"
   sed -i "s${d}__RUN_DIR__${d}${run_dir}${d}g" "${slurm_script}"
   sed -i "s${d}__STATE__${d}${state}${d}g" "${slurm_script}"
   sed -i "s${d}__STDERR__${d}${stderr}${d}g" "${slurm_script}"
@@ -169,8 +172,8 @@ SLURM_SCRIPT_HEREDOC
   sed -i "s${d}__END_TIME__${d}${end_time}${d}g" "${slurm_script}"
   sed -i "s${d}__EXIT_CODE__${d}${exit_code}${d}g" "${slurm_script}"
   sed -i "s${d}__MAIN_LABEL__${d}${main_label}${d}g" "${slurm_script}"
-  sed -i "s${d}__MAIN_CMD__${d}${main_cmd_local}${d}g" "${slurm_script}"
-  sed -i "s${d}__POST_CMD__${d}${post_cmd}${d}g" "${slurm_script}"
+  sed -i "s${d}__MAIN_CMD__${d}${esc_main}${d}g" "${slurm_script}"
+  sed -i "s${d}__POST_CMD__${d}${esc_post}${d}g" "${slurm_script}"
 
   if grep -qP '__[A-Z_]{3,}__' "${slurm_script}"; then
     echo "BUG: unreplaced placeholders in ${slurm_script}:" >&2
